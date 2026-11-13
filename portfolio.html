@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Salem – Reverse Engineering & Malware Development</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+:root{--bg:#030504;--panel:rgba(4,12,8,.86);--line:#1c3526;--ink:#c0d8c9;--hi:#eafff1;--mute:#6f9380;--red:#3fcf6e;--blue:#5aa9ff;--amb:#e3b341;--grn:#3fcf6e;--pur:#bc8cff;--bad:#ff4d5e;color-scheme:dark;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+html{scroll-padding-top:70px}
+body{margin:0;background:radial-gradient(900px 600px at 80% -10%,rgba(63,207,110,.08),transparent 70%),radial-gradient(700px 500px at 0% 100%,rgba(227,179,65,.05),transparent 70%),var(--bg);color:var(--ink);font:14.5px/1.7 "JetBrains Mono",ui-monospace,Menlo,monospace;min-height:100vh}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:60}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:2;background:repeating-linear-gradient(0deg,rgba(0,0,0,.14) 0 1px,transparent 1px 4px)}
+#net,#rain{position:fixed;inset:0;width:100%;height:100%;z-index:0}#rain{opacity:.22}
+a{color:var(--blue)}
+code,pre,.mono{font-family:"JetBrains Mono",ui-monospace,monospace}
+h1,h2,h3,.hd{font-family:"JetBrains Mono",ui-monospace,monospace;font-weight:700;color:var(--hi)}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.wrap{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:0 20px}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;background:rgba(8,10,15,.86);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.hb{display:flex;align-items:center;gap:14px;height:54px}
+.logo{font:600 15px "JetBrains Mono",monospace;color:var(--hi);text-decoration:none;white-space:nowrap}
+.logo b{color:var(--red)}
+.logo i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--grn);margin-right:8px;box-shadow:0 0 8px var(--grn);animation:pu 2s infinite}
+@keyframes pu{50%{opacity:.35}}
+nav{display:flex;gap:2px;margin:0 auto;overflow-x:auto}
+nav a{font:500 13.5px "JetBrains Mono",monospace;color:var(--mute);text-decoration:none;padding:16px 14px;white-space:nowrap;border-bottom:2px solid transparent}
+nav a:hover{color:var(--hi)}nav a.on{color:var(--hi);border-color:var(--red);background:rgba(63,207,110,.08)}
+.clock{font:12.5px "JetBrains Mono",monospace;color:var(--mute);white-space:nowrap}
+main{padding:36px 0 10px;min-height:72vh}
+.hero{display:grid;grid-template-columns:1.35fr 1fr;gap:34px;align-items:center;margin-bottom:34px}
+.pr{color:var(--grn);margin:0 0 6px;font-size:14px}
+h1.name{font:400 clamp(26px,4.6vw,40px)/1 VT323,"JetBrains Mono",monospace;letter-spacing:.06em;margin:0 0 12px;position:relative;display:inline-block}
+h1.name::before,h1.name::after{content:attr(data-t);position:absolute;left:0;top:0;width:100%;opacity:0;pointer-events:none;animation:gj 6s infinite}
+h1.name::before{color:var(--red);transform:translate(-3px,0);clip-path:inset(20% 0 45% 0)}
+h1.name::after{color:var(--blue);transform:translate(3px,0);clip-path:inset(55% 0 10% 0);animation-delay:.08s}
+h1.name:hover::before,h1.name:hover::after{opacity:.85}
+@keyframes gj{0%,93%,100%{opacity:0}94%,96%{opacity:.9}95%{opacity:0}}
+.role{font:500 clamp(15px,2.4vw,20px) "JetBrains Mono",monospace;color:var(--amb);min-height:1.7em}
+.role::after{content:"█";color:var(--red);margin-left:3px;animation:bl 1s steps(1) infinite}@keyframes bl{50%{opacity:0}}
+.lead{color:var(--ink);max-width:540px;margin:14px 0 22px;font-size:17px}
+.ban{margin:4px 0 8px;font:700 clamp(9px,2.6vw,15px)/1.12 "JetBrains Mono",monospace;color:var(--red);overflow:hidden;white-space:pre;text-shadow:0 0 8px rgba(63,207,110,.5)}.btns{display:flex;flex-wrap:wrap;gap:12px}
+.btn{display:inline-block;padding:9px 20px;border-radius:4px;text-decoration:none;font:500 14px "JetBrains Mono",monospace;border:1px solid var(--line);color:var(--hi);background:rgba(255,255,255,.03);cursor:pointer;transition:border-color .15s,background .15s}
+.btn:hover{border-color:var(--blue);background:rgba(88,166,255,.1)}
+.btn.p{background:var(--red);border-color:var(--red);color:#031007}.btn.p:hover{background:#5bdc86}
+.id{background:var(--panel);border:1px solid var(--line);padding:18px;border-radius:0}
+.frame{position:relative;width:100%;max-width:230px;aspect-ratio:1;margin:0 auto 16px;border:1px solid var(--line);overflow:hidden;background:#0a1018;animation:jt 7s infinite}
+.frame img,.frame svg,.frame video{width:100%;height:100%;object-fit:cover;display:block}.frame>img,.frame>video{position:absolute;inset:0;z-index:1}
+.frame::before,.frame::after{content:"";position:absolute;width:22px;height:22px;z-index:3;border:2px solid var(--red)}
+.frame::before{left:6px;top:6px;border-right:0;border-bottom:0}.frame::after{right:6px;bottom:6px;border-left:0;border-top:0}
+.sl{position:absolute;left:0;right:0;height:46px;z-index:2;background:linear-gradient(180deg,transparent,rgba(88,166,255,.28),transparent);animation:sc 3.6s linear infinite;pointer-events:none}
+@keyframes sc{from{top:-46px}to{top:100%}}
+@keyframes jt{0%,94%,100%{transform:none}95%{transform:translate(2px,-1px)}97%{transform:translate(-2px,1px)}}
+.blink{animation:bk 4.5s infinite;transform-box:fill-box;transform-origin:center}@keyframes bk{0%,94%,100%{transform:scaleY(1)}97%{transform:scaleY(.1)}}
+.kv{display:grid;grid-template-columns:92px 1fr;gap:3px 10px;font:13px "JetBrains Mono",monospace}
+.kv b{color:var(--blue);font-weight:500}.kv span{color:var(--ink);overflow-wrap:anywhere}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:0;margin-bottom:18px;overflow:hidden;box-shadow:0 0 22px rgba(63,207,110,.05)}
+.ph{padding:8px 16px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.025);font:500 13px "JetBrains Mono",monospace;color:var(--mute)}
+.ph b{color:var(--red);font-weight:500}.ph em{color:var(--blue);font-style:normal}
+.pb{padding:18px 20px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:18px}.two .panel{margin:0}
+.chip{display:inline-block;font:500 12.5px "JetBrains Mono",monospace;padding:1px 10px;border:1px solid currentColor;border-radius:3px;margin:0 6px 7px 0}
+.c0{color:var(--blue)}.c1{color:var(--red)}.c2{color:var(--amb)}.c3{color:var(--grn)}.c4{color:var(--pur)}
+.pg{font-size:clamp(28px,5vw,42px);margin:0 0 4px}.pg::before{content:"# ";color:var(--red)}
+.lede{color:var(--mute);margin:0 0 22px}
+.log{display:grid;grid-template-columns:104px 1fr auto;gap:16px;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line);text-decoration:none;color:var(--ink);border-left:3px solid transparent;transition:background .15s,border-color .15s}
+.log:last-child{border-bottom:0}
+.log:hover{background:rgba(88,166,255,.06);border-left-color:var(--dc,var(--red))}
+.log .dt{font:12.5px "JetBrains Mono",monospace;color:var(--mute)}
+.log h3{margin:0 0 2px;font-size:17px}.log p{margin:0;color:var(--mute);font-size:14px}
+.bd{font:600 12px "JetBrains Mono",monospace;padding:1px 10px;border:1px solid currentColor;border-radius:3px}
+input.s{width:100%;max-width:440px;background:rgba(0,0,0,.4);border:1px solid var(--line);color:var(--ink);padding:9px 14px;border-radius:4px;font:14px "JetBrains Mono",monospace;margin-bottom:12px}
+.chips button{background:none;border:1px solid var(--line);color:var(--mute);font:500 12.5px "JetBrains Mono",monospace;padding:2px 12px;border-radius:3px;margin:0 6px 8px 0;cursor:pointer}
+.chips button.on{border-color:var(--red);color:var(--hi);background:rgba(63,207,110,.14)}
+/* article + code */
+.art .pb{padding:26px 28px}
+.art h1{font-size:clamp(26px,4.5vw,38px);line-height:1.12;margin:10px 0}
+.art h2{font-size:23px;margin:34px 0 8px}.art h2::before{content:"## ";color:var(--red);font-family:"JetBrains Mono",monospace}
+.art h3{font-size:18px;margin:22px 0 6px;color:var(--amb)}
+.art p,.art li{max-width:700px}
+.art code{background:rgba(110,118,129,.25);color:#e6edf3;padding:1px 6px;border-radius:4px;font-size:.88em}
+.art blockquote{margin:18px 0;padding:10px 18px;border-left:3px solid var(--blue);background:rgba(88,166,255,.06);color:var(--ink);border-radius:0 4px 4px 0}
+.art blockquote.tip{border-color:var(--grn);background:rgba(63,185,80,.07)}.art blockquote.warn{border-color:var(--bad);background:rgba(255,77,94,.08)}
+.art blockquote.flag{border-color:var(--amb);background:rgba(227,179,65,.08);color:var(--amb);font-family:"JetBrains Mono",monospace}
+.art img{max-width:100%;border:1px solid var(--line);border-radius:4px}
+figure.code{margin:20px 0;border:1px solid #2b3445;border-radius:6px;overflow:hidden;background:#0d1117;box-shadow:0 0 0 1px rgba(255,77,94,.06),0 12px 30px rgba(0,0,0,.45)}
+figure.code figcaption{display:flex;align-items:center;gap:7px;padding:8px 14px;background:#161b22;border-bottom:1px solid #2b3445}
+figure.code figcaption i{width:10px;height:10px;border-radius:50%;background:#ff5f56}
+figure.code figcaption i:nth-child(2){background:#ffbd2e}figure.code figcaption i:nth-child(3){background:#27c93f}
+.fn{margin-left:8px;font:500 12.5px "JetBrains Mono",monospace;color:var(--mute);flex:1}
+.cpy{background:none;border:1px solid #2b3445;color:var(--blue);border-radius:3px;font:500 12px "JetBrains Mono",monospace;padding:1px 10px;cursor:pointer}
+.cpy:hover{border-color:var(--grn);color:var(--grn)}
+figure.code pre{margin:0;padding:14px 0;overflow-x:auto;font-size:13.5px;line-height:1.65;counter-reset:ln}
+.l{display:block;position:relative;padding:0 18px 0 58px;white-space:pre;counter-increment:ln;color:#c9d1d9}
+.l::before{content:counter(ln);position:absolute;left:0;width:40px;text-align:right;color:#484f58}
+.l:hover{background:rgba(110,118,129,.12)}
+.tc{color:#8b949e;font-style:italic}.ts{color:#a5d6ff}.tn{color:#79c0ff}.tk{color:#ff7b72}.tf{color:#d2a8ff}.tt{color:#ffa657}.tg{color:var(--amb)}
+footer{position:relative;z-index:1;border-top:1px solid var(--line);margin-top:40px;padding:20px 0;color:var(--mute);font:12.5px "JetBrains Mono",monospace}
+footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+@media (max-width:820px){.hero{grid-template-columns:1fr}.two{grid-template-columns:1fr}.log{grid-template-columns:1fr;gap:6px}.clock{display:none}.logo{font-size:13px}.art .pb{padding:20px 16px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.sl{display:none}}
+</style>
+</head>
+<body>
+<canvas id="rain" aria-hidden="true"></canvas><canvas id="net" aria-hidden="true"></canvas>
+<header><div class="wrap hb"><a class="logo" href="#home"><i></i>salem<b>@</b>sec</a><nav id="nav"></nav><span class="clock" id="clock"></span></div></header>
+<main class="wrap" id="view"></main>
+<footer><div class="wrap"><span id="fl"></span><span>© <span id="yr"></span> salem</span></div></footer>
+<script>
+/* ============================================================
+   EDIT THIS BLOCK – all site content lives here.
+   avatar: leave "" for the animated hooded icon, or put a picture
+   here (data: URI works; remote image links are blocked on the
+   published page – send me your picture and I’ll embed it).
+   ============================================================ */
+const SITE = {
+  name: "Mohammed Salem Gorrab", short: "Salem", avatar: "file:///C:/Users/D2D/Downloads/13073-297516-lostintherain.gif", /* <- path of your picture, gif or video (png jpg gif webp svg mp4 webm) */
+  roles: ["Reverse Engineer", "Malware Developer", "CTF Player", "Lifelong Learner"],
+  email: "grghdghhhh@gmail.com",
+  bio: ["I’m a 17yo High School student from Tunisia. I break Softwares, play CTFs and enjoy learning things everyday",
+        "Right now: Malware Development For Windows And RE"],
+  skills: { Offensive: "Malware Development, PWN, CTFs", Tooling: "Ghidra, GDB, Python, Bash, C/C++, Assembly, Rust" },
+  focus: "Maldev, AD, RE", platforms: "Maldev Academy, HTB", status: "Learning",
+  links: [["GitHub","Tools and scripts","https://github.com/8ndn"],["X / Twitter","Short notes","https://x.com/43x0n"]]
+};
+/* ============================================================
+   ADD A WRITEUP: copy one object, paste it at the TOP of POSTS.
+   difficulty: Easy | Medium | Hard | Insane.
+   Body is Markdown inside backticks. slug = letters/digits/hyphens.
+   Code: open a block with ```bash  (or c, cpp, python, asm, js)
+   and add a file name after it:  ```c  loader.c
+   Callouts:  > [!tip] text   > [!warn] text   > [!flag] HTB{...}
+   ============================================================ */
+const POSTS = [
+{ slug:"htb-example-box", title:"HTB: Example Box", date:"2026-10-28", category:"HTB", difficulty:"Easy", tags:["linux"],
+  summary:"From an exposed backup file to root through a writable cron script.",
+  body:`
+## Overview
+Sample writeup. Delete it and add your own. Code blocks get colours, line numbers and a copy button.
+
+## Enumeration
+\`\`\`bash scan.sh
+# full port scan, then fuzz the web root
+nmap -p- --min-rate 5000 -sC -sV 10.10.10.10 -oN scan.txt
+ffuf -u http://10.10.10.10/FUZZ -w /usr/share/wordlists/dirb/common.txt
+\`\`\`
+Ports **22** and **80** are open. Fuzzing finds \`config.php.bak\` with hard-coded credentials.
+
+> [!tip] Always try discovered passwords against every service.
+
+## Reading the process list
+\`\`\`c  check.c
+#include <windows.h>
+// open a process by PID and print its handle
+int main(void) {
+    DWORD pid = 0x1A4;
+    HANDLE h = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
+    if (h == NULL) { printf("failed: %d\\n", GetLastError()); return 1; }
+    return 0;
+}
+\`\`\`
+
+\`\`\`asm  stub.asm
+; classic xor zeroing
+xor eax, eax
+mov ecx, 0x10
+call 0x401000
+ret
+\`\`\`
+
+## Privilege escalation
+A root cron job runs a world-writable script. Append a reverse shell, wait one minute, get root.
+
+> [!warn] Only run this against machines you own or are allowed to test.
+
+> [!flag] HTB{example_flag_here}
+`}
+];
+/* ============ end of editable content ============ */
+
+const $=s=>document.querySelector(s), esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const BANNER=String.raw` ____    _    _     _____ __  __
+/ ___|  / \  | |   | ____|  \/  |
+\___ \ / _ \ | |   |  _| | |\/| |
+ ___) / ___ \| |___| |___| |  | |
+|____/_/   \_\_____|_____|_|  |_|`;
+const NAV=[["home","~/home"],["about","~/about"],["writeups","~/writeups"],["contact","~/contact"]];
+const DC={Easy:"#3fb950",Medium:"#e3b341",Hard:"#ff4d5e",Insane:"#bc8cff"};
+/* --- syntax highlighter --- */
+const KW=new Set("if else elif fi then for while do done return break continue switch case def class import from as const let var function new try catch except finally in is not and or with pass lambda static struct typedef enum goto sudo cd echo cat grep curl wget chmod chown export python python3 nmap ffuf nc ssh gcc make mov push pop call jmp ret xor add sub lea cmp jz jnz je jne nop syscall true false null None".split(" "));
+const TY=new Set("int char void long short unsigned signed float double bool byte DWORD WORD BYTE HANDLE LPVOID PVOID SIZE_T NTSTATUS size_t uint8_t uint32_t uint64_t string str list dict eax ebx ecx edx esi edi esp ebp rax rbx rcx rdx rsi rdi rsp rbp rip".split(" "));
+function hl(line,lang){lang=(lang||"").toLowerCase();const sh=/^(|bash|sh|shell|zsh|ps1|powershell)$/.test(lang),sl=/^(c|cpp|c\+\+|h|js|javascript|ts|java|go|rust|rs|php|cs|json)$/.test(lang),sm=/^(asm|nasm|x86)$/.test(lang);
+ const cm=sl?"\\/\\/.*|\\/\\*.*?\\*\\/":sm?";.*":sh?"#.*|\\/\\/.*":"#.*",w=sh?"[A-Za-z_][\\w-]*":"[A-Za-z_]\\w*";
+ const rx=new RegExp(`(${cm})|("(?:\\\\.|[^"\\\\])*"|'(?:\\\\.|[^'\\\\])*')|(\\b0x[0-9a-fA-F]+\\b|\\b\\d+\\b)|(${w}(?=\\())|(${sh?"--?[A-Za-z][\\w-]*":"(?!)"})|(${w})|(^\\s*#\\w+)`,"g");
+ let o="",i=0,m;while((m=rx.exec(line))){if(m[0]==="")rx.lastIndex++;o+=esc(line.slice(i,m.index));i=m.index+m[0].length;const t=esc(m[0]);
+  o+=m[1]?`<span class="tc">${t}</span>`:m[2]?`<span class="ts">${t}</span>`:m[3]?`<span class="tn">${t}</span>`:m[4]?`<span class="tf">${t}</span>`:m[5]?`<span class="tg">${t}</span>`:m[6]?(KW.has(m[0])?`<span class="tk">${t}</span>`:TY.has(m[0])?`<span class="tt">${t}</span>`:t):`<span class="tk">${t}</span>`}
+ return o+esc(line.slice(i))}
+let CODES=[];
+function md(src){const b=[];CODES=[];src=src.replace(/```(\w*)([^\n]*)\n([\s\S]*?)```/g,(m,lang,ttl,c)=>{c=c.replace(/\n$/,"");CODES.push(c);
+  b.push(`<figure class="code"><figcaption><i></i><i></i><i></i><span class="fn">${esc(ttl.trim()||lang||"code")}</span><button class="cpy" data-i="${CODES.length-1}">copy</button></figcaption><pre><code>${c.split("\n").map(l=>`<span class="l">${hl(l,lang)||"\u200b"}</span>`).join("")}</code></pre></figure>`);return"\u0000"+(b.length-1)+"\u0000"});
+ const inl=t=>esc(t).replace(/`([^`]+)`/g,"<code>$1</code>").replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>").replace(/\*([^*]+)\*/g,"<em>$1</em>").replace(/!\[([^\]]*)\]\((https?:[^)\s]+|data:image[^)\s]+)\)/g,'<img alt="$1" src="$2">').replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
+ let o="",l=null;const c=()=>{if(l){o+="</"+l+">";l=null}};
+ src.split("\n").forEach(s=>{let m;if(m=s.match(/^\u0000(\d+)\u0000$/)){c();o+=b[m[1]]}else if(m=s.match(/^(#{1,3}) (.*)/)){c();o+=`<h${m[1].length+1}>${inl(m[2])}</h${m[1].length+1}>`}
+ else if(m=s.match(/^[-*] (.*)/)){if(l!="ul"){c();o+="<ul>";l="ul"}o+="<li>"+inl(m[1])+"</li>"}else if(m=s.match(/^\d+\. (.*)/)){if(l!="ol"){c();o+="<ol>";l="ol"}o+="<li>"+inl(m[1])+"</li>"}
+ else if(m=s.match(/^> ?(.*)/)){c();const k=m[1].match(/^\[!(tip|warn|flag)\] ?/i);o+=`<blockquote class="${k?k[1].toLowerCase():""}">${inl(k?m[1].slice(k[0].length):m[1])}</blockquote>`}else if(!s.trim())c();else{c();o+="<p>"+inl(s)+"</p>"}});c();return o}
+
+const sorted=()=>[...POSTS].sort((a,b)=>b.date.localeCompare(a.date));
+const badge=p=>p.difficulty?`<span class="bd" style="color:${DC[p.difficulty]||"#58a6ff"}">${esc(p.difficulty)}</span>`:"";
+const chips=s=>s.split(",").map((t,i)=>`<span class="chip c${i%5}">${esc(t.trim())}</span>`).join("");
+const prow=p=>`<a class="log" style="--dc:${DC[p.difficulty]||"#58a6ff"}" href="#w-${p.slug}"><div class="dt">${p.date}<br>${esc(p.category)}</div><div><h3>${esc(p.title)}</h3><p>${esc(p.summary)}</p></div>${badge(p)}</a>`;
+const panel=(t,b,pad=1)=>`<section class="panel"><div class="ph"><b>┌─[</b> ${t} <b>]──</b></div>${pad?`<div class="pb">${b}</div>`:b}</section>`;
+const mediaHTML=()=>{const a=SITE.avatar;if(!a)return"";const v=/\.(mp4|webm|mov|m4v|ogv)(\?|#|$)/i.test(a)||/^data:video/.test(a);return v?`<video src="${esc(a)}" autoplay muted loop playsinline onerror="this.remove()"></video>`:`<img alt="${esc(SITE.name)}" src="${esc(a)}" onerror="this.remove()">`};
+const avatar=()=>`<div class="frame">${mediaHTML()}${""+
+ `<svg viewBox="0 0 120 120" role="img" aria-label="Hooded hacker icon"><rect width="120" height="120" fill="#0a1018"/><g stroke="#58a6ff" opacity=".18"><path d="M0 30h120M0 60h120M0 90h120M30 0v120M60 0v120M90 0v120"/></g><path d="M12 124C12 50 34 14 60 14s48 36 48 110z" fill="#141c29" stroke="#2a3850"/><ellipse cx="60" cy="62" rx="26" ry="30" fill="#04070b"/><g class="blink" fill="#ff4d5e"><rect x="43" y="56" width="13" height="6" rx="3"/><rect x="64" y="56" width="13" height="6" rx="3"/></g><g fill="#ff4d5e" opacity=".25"><rect x="40" y="53" width="19" height="12" rx="6"/><rect x="61" y="53" width="19" height="12" rx="6"/></g><text x="60" y="108" text-anchor="middle" font-family="monospace" font-size="13" fill="#3fb950">&gt;_ root</text></svg>`}<i class="sl"></i></div>`;
+let tag="All",q="",tm;
+const filt=()=>sorted().filter(p=>(tag=="All"||p.category==tag||p.tags.includes(tag))&&(p.title+p.summary+p.tags.join(" ")).toLowerCase().includes(q));
+const kv=`<div class="kv"><b>alias</b><span>${esc(SITE.short)}</span><b>focus</b><span>${esc(SITE.focus)}</span><b>platforms</b><span>${esc(SITE.platforms)}</span><b>status</b><span style="color:var(--grn)">● ${esc(SITE.status)}</span></div>`;
+const V={
+home:()=>`<section class="hero"><div><p class="pr mono">root@salem:~# whoami</p><pre class="ban" aria-label="${esc(SITE.name)}">${esc(BANNER)}</pre><h1 class="name" data-t="${esc(SITE.name)}">${esc(SITE.name)}</h1><div class="role" id="role"></div><p class="lead">${esc(SITE.bio[0])}</p><div class="btns"><a class="btn p" href="#writeups">./read_writeups</a><a class="btn" href="#contact">./contact</a></div></div><div class="id">${avatar()}${kv}</div></section>
+<div class="two">${panel("skills.json",chips(Object.values(SITE.skills).join(", ")))}${panel("latest_writeups",sorted().slice(0,3).map(prow).join(""),0)}</div>`,
+about:()=>`<h2 class="pg hd">about</h2><p class="lede">Who I am and what I’m learning.</p><div class="two" style="margin-bottom:18px">${panel("bio.md",SITE.bio.map(b=>`<p style="margin:0 0 10px">${esc(b)}</p>`).join(""))}${panel("system_info",avatar()+kv)}</div>${panel("skills.json",Object.entries(SITE.skills).map(([k,v])=>`<h3 style="margin:0 0 6px;font-size:16px">${esc(k)}</h3><div style="margin-bottom:10px">${chips(v)}</div>`).join(""))}`,
+writeups:()=>{const all=["All",...new Set(POSTS.flatMap(p=>[p.category,...p.tags]))],items=filt();
+ return`<h2 class="pg hd">writeups</h2><p class="lede">Boxes, challenges and things I broke on purpose.</p><input class="s" id="q" type="search" placeholder="grep writeups..." value="${esc(q)}" aria-label="Search writeups"><div class="chips">${all.map(t=>`<button data-t="${esc(t)}" class="${t==tag?"on":""}">${esc(t)}</button>`).join("")}</div>${panel("mission_log",`<div id="items">${items.length?items.map(prow).join(""):'<p style="padding:18px 20px;margin:0">No matches. Clear the search or pick another tag.</p>'}</div>`,0)}`},
+contact:()=>`<h2 class="pg hd">contact</h2><p class="lede">Email is the fastest way to reach me.</p>${panel("mail",`<div class="kv" style="grid-template-columns:70px 1fr;margin-bottom:16px"><b>to</b><span style="font-size:15px">${esc(SITE.email)}</span></div><div class="btns"><a class="btn p" href="mailto:${esc(SITE.email)}">./send_mail</a><button class="btn" id="cp">./copy_address</button></div>`)}${panel("links",SITE.links.map(l=>`<a class="log" style="grid-template-columns:1fr auto" href="${esc(l[2])}" target="_blank" rel="noopener"><div><h3>${esc(l[0])}</h3><p>${esc(l[1])}</p></div><span class="dt">${esc(l[2].replace(/^https?:\/\/(www\.)?/,""))}</span></a>`).join(""),0)}`
+};
+const article=p=>`<div class="panel art"><div class="ph"><b>┌─[</b> writeups/${esc(p.slug)}.md <b>]──</b></div><div class="pb"><a class="mono" style="font-size:13px" href="#writeups">&lt; cd ..</a><h1 class="hd">${esc(p.title)}</h1><div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:8px">${badge(p)}<span class="mono" style="color:var(--mute);font-size:13px">${esc(p.category)} | ${p.date}</span></div><div>${p.tags.map((t,i)=>`<span class="chip c${i%5}">#${esc(t)}</span>`).join("")}</div>${md(p.body)}</div></div>`;
+
+function route(){clearTimeout(tm);const h=location.hash.slice(1)||"home",p=h.startsWith("w-")&&POSTS.find(x=>"w-"+x.slug==h),cur=p?"writeups":(V[h]?h:"home");
+ $("#view").innerHTML=p?article(p):V[cur]();
+ $("#nav").innerHTML=NAV.map(n=>`<a class="${n[0]==cur?"on":""}" href="#${n[0]}">${n[1]}</a>`).join("");
+ document.title=p?p.title+" – "+SITE.short:SITE.short+" – "+SITE.roles[0];scrollTo(0,0);typer()}
+function typer(){const el=$("#role");if(!el)return;const R=SITE.roles;if(matchMedia("(prefers-reduced-motion: reduce)").matches){el.textContent=R.join(" / ");return}
+ let i=0,j=0,d=false;(function t(){const w=R[i];el.textContent=w.slice(0,j);if(!d&&j==w.length){d=true;tm=setTimeout(t,1400);return}if(d&&j==0){d=false;i=(i+1)%R.length}j+=d?-1:1;tm=setTimeout(t,d?35:80)})()}
+addEventListener("hashchange",route);
+document.addEventListener("input",e=>{if(e.target.id=="q"){q=e.target.value.toLowerCase();$("#items").innerHTML=filt().map(prow).join("")||'<p style="padding:18px 20px;margin:0">No matches.</p>'}});
+document.addEventListener("click",e=>{const t=e.target,b=t.closest(".chips button");if(b){tag=b.dataset.t;$("#view").innerHTML=V.writeups()}
+ const cp=t.closest(".cpy"),em=t.id=="cp";if(cp||em){const txt=cp?CODES[cp.dataset.i]:SITE.email,el=cp||t,old=el.textContent;try{navigator.clipboard.writeText(txt).then(()=>el.textContent=cp?"copied!":"copied",()=>el.textContent="failed")}catch(x){el.textContent="failed"}setTimeout(()=>el.textContent=old,1400)}});
+$("#fl").textContent=SITE.links.map(l=>l[0]).join(" | ");$("#yr").textContent=new Date().getFullYear();
+setInterval(()=>$("#clock").textContent="ONLINE "+new Date().toTimeString().slice(0,8),1000);
+
+/* matrix rain */
+(function(){if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;const c=$("#rain"),x=c.getContext("2d"),ch="01アイウエオカキクケコサシスセソ{}[]<>/#$%&=+*ABCDEF",fs=15,TN=["63,207,110","63,207,110","63,207,110","90,169,255","227,179,65"];let W,H,D,T;
+ const rs=()=>{W=c.width=innerWidth;H=c.height=innerHeight;const n=Math.ceil(W/fs);D=Array.from({length:n},()=>Math.random()*H/fs);T=Array.from({length:n},()=>TN[Math.random()*5|0])};rs();addEventListener("resize",rs);
+ setInterval(()=>{x.fillStyle="rgba(3,5,4,.09)";x.fillRect(0,0,W,H);x.font=fs+"px monospace";D.forEach((y,i)=>{x.fillStyle=`rgba(${T[i]},.75)`;x.fillText(ch[Math.random()*ch.length|0],i*fs,y*fs);D[i]=y*fs>H&&Math.random()>.975?0:y+1})},60)})();
+/* network background */
+(function(){if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;const cv=$("#net"),x=cv.getContext("2d");let W,H,N=[],M={x:-999,y:-999};
+ const rs=()=>{W=cv.width=innerWidth;H=cv.height=innerHeight;N=Array.from({length:Math.min(70,W*H/16000|0)},()=>({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.35,vy:(Math.random()-.5)*.35}))};rs();addEventListener("resize",rs);
+ addEventListener("pointermove",e=>{M.x=e.clientX;M.y=e.clientY});
+ (function f(){x.clearRect(0,0,W,H);for(const a of N){a.x+=a.vx;a.y+=a.vy;if(a.x<0||a.x>W)a.vx*=-1;if(a.y<0||a.y>H)a.vy*=-1}
+  for(let i=0;i<N.length;i++){const a=N[i];for(let j=i+1;j<N.length;j++){const b=N[j],d=Math.hypot(a.x-b.x,a.y-b.y);if(d<140){x.strokeStyle=`rgba(63,207,110,${.2*(1-d/140)})`;x.lineWidth=1;x.beginPath();x.moveTo(a.x,a.y);x.lineTo(b.x,b.y);x.stroke()}}
+   const dm=Math.hypot(a.x-M.x,a.y-M.y);if(dm<170){x.strokeStyle=`rgba(227,179,65,${.55*(1-dm/170)})`;x.beginPath();x.moveTo(a.x,a.y);x.lineTo(M.x,M.y);x.stroke()}
+   x.fillStyle="rgba(150,240,180,.6)";x.beginPath();x.arc(a.x,a.y,1.8,0,7);x.fill()}
+  requestAnimationFrame(f)})()})();
+route();
+</script>
+</body>
+</html>
